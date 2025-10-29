@@ -1,0 +1,47 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+
+# --- Виртуальное окружение ---
+.venv/
+venv/
+env/
+
+# --- IDE / редакторы ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Кэш и логи ---
+*.log
+*.sqlite3
+*.db
+*.tmp
+
+# --- Тесты и покрытие ---
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- PyInstaller ---
+build/
+dist/
+
+# --- Дополнительно ---
+# База данных (если создаётся локально)
+db.sqlite3
+
+# --- Разрешённые файлы проекта ---
+!db.py
+!main.py
+!models.py
+!schemas.py
