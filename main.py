@@ -1,9 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends
-from sqlmodel import SQLModel, select
 import uvicorn
+from fastapi import Depends, FastAPI, HTTPException
+from sqlmodel import SQLModel, select
+from db import *
 from models import *
 from schemas import *
-from db import *
 
 app = FastAPI()
 
@@ -201,20 +201,49 @@ def get_followers(user_id : int, s : Session = Depends(get_session)):
     if not userdb:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
 
+    followers = [u.follower.name for u in userdb.followers]
 
-    return userdb.followers
+    return {
+        "user" : userdb.name,
+        "followers" : followers
+    }
 # ---Получить список подписчиков пользователя
 
 # ---Получить список тех, на кого подписан пользователь---
 @app.get("/users/{user_id}/following", tags=["Получить"], summary="Получить список тех, на кого подписан пользователь")
 def get_followed(user_id : int, s : Session = Depends(get_session)):
-    ...
+    userdb = s.get(User, user_id)
+    if not userdb:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    following = [u.followed.name for u in userdb.following]
+
+    return {
+        "name" : userdb.name,
+        "following" : following
+    }
 # ---Получить список тех, на кого подписан пользователь---
 
 # ---Получить все посты от пользователей, на которых подписан данный пользователь---
 @app.get("/feed/{user_id}", tags=["Получить"], summary="Получить все посты от пользователей, на которых подписан данный пользователь")
 def get_followed_posts(user_id : int, s : Session = Depends(get_session)):
-    ...
+    userdb = s.get(User, user_id)
+    if not userdb:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    posts = []
+    for f in userdb.following:
+        posts.extend(f.followed.posts)
+    
+    return {
+        "user" : userdb.name,
+        "feed" : [
+            {
+                "author" : p.user.name,
+                "title" : p.title
+            } for p in posts
+        ]
+    }
 # ---Получить все посты от пользователей, на которых подписан данный пользователь---
 
 if __name__ == "__main__":

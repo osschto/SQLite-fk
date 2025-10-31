@@ -1,5 +1,6 @@
-from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
-from typing import Optional, List
+from typing import List, Optional
+from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
+
 
 # ---Промежуточная таблица для Post и Tag---
 class PostTag(SQLModel, table=True):
