@@ -14,6 +14,10 @@ class User(SQLModel, table=True):
     
     posts : List["Post"] = Relationship(back_populates="user")
     likes : List["Like"] = Relationship(back_populates="users")
+    following: List["Subscription"] = Relationship(back_populates="follower", 
+                                                   sa_relationship_kwargs={"foreign_keys": "[Subscription.follower_id]"})
+    followers: List["Subscription"] = Relationship(back_populates="followed", 
+                                                   sa_relationship_kwargs={"foreign_keys": "[Subscription.followed_id]"})
 # ---Таблица для пользователей---
 
 # ---Таблица для постов---
@@ -63,4 +67,9 @@ class Subscription(SQLModel, table=True):
     id : Optional[int] = Field(default=None, primary_key=True)
     follower_id : Optional[int] = Field(foreign_key="user.id")
     followed_id : Optional[int] = Field(foreign_key="user.id")
+
+    follower: Optional[User] = Relationship(back_populates="following", 
+                                            sa_relationship_kwargs={"foreign_keys": "[Subscription.follower_id]"})
+    followed: Optional[User] = Relationship(back_populates="followers", 
+                                            sa_relationship_kwargs={"foreign_keys": "[Subscription.followed_id]"})
 # ---Таблица для подписок---

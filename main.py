@@ -97,24 +97,24 @@ def add_like(post_id : int, user_id : int, s : Session = Depends(get_session)):
 # ---Подписаться---
 @app.post("/users/{user_id}/follow/{target_id}", tags=["Функции"], summary="Подписаться на пользователя")
 def subscribe(user_id : int, target_id : int, s : Session = Depends(get_session)):
-    if user_id == target_id:
-        raise HTTPException(status_code=400, detail="Вы не можете подписаться сами на себя")
-    
+    subscription = Subscription(follower_id = user_id, followed_id = target_id)
     userdb = s.get(User, user_id)
     targetdb = s.get(User, target_id)
     if not userdb or not targetdb:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     
-    check = s.exec(select(Subscription).where(
-            (Subscription.follower_id == user_id) &
-            (Subscription.followed_id == target_id))).first()
-    if check:
-        raise HTTPException(status_code=400, detail="Вы уже подписаны на данного пользователя")
+    if user_id == target_id:
+        raise HTTPException(status_code=400, detail="Вы не можете подписаться на себя")
     
-    subscription = Subscription(follower_id = user_id, followed_id = target_id)
+    for u in targetdb.followers:
+        if subscription.follower_id == u.follower_id:
+            raise HTTPException(status_code=400, detail="Вы уже подписаны на этого пользователя")
+        
     s.add(subscription)
     s.commit()
     return {f"{userdb.name} подписался на {targetdb.name}"}
+    
+
 # ---Подписаться---
 
 # ---Получить список всех постов пользователя---
@@ -199,52 +199,22 @@ def get_like_list(post_id : int, s : Session = Depends(get_session)):
 def get_followers(user_id : int, s : Session = Depends(get_session)):
     userdb = s.get(User, user_id)
     if not userdb:
-        raise HTTPException(status_code=404, detail=f"Пользователь не найден")
-    
-    followers = s.exec(select(User)
-                       .join(Subscription, Subscription.follower_id == User.id)
-                       .where(Subscription.followed_id == user_id)).all()
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
 
-    return {
-        "user" : userdb.name,
-        "followers" : [f.name for f in followers]
-    }
+
+    return userdb.followers
 # ---Получить список подписчиков пользователя
 
 # ---Получить список тех, на кого подписан пользователь---
 @app.get("/users/{user_id}/following", tags=["Получить"], summary="Получить список тех, на кого подписан пользователь")
 def get_followed(user_id : int, s : Session = Depends(get_session)):
-    userdb = s.get(User, user_id)
-    if not userdb:
-        raise HTTPException(status_code=404, detail=f"Пользователь не найден")
-    
-    following = s.exec(select(User)
-                       .join(Subscription, Subscription.followed_id == User.id)
-                       .where(Subscription.follower_id == user_id)).all()
-
-    return {
-        "user" : userdb.name,
-        "following" : [f.name for f in following]
-    }
+    ...
 # ---Получить список тех, на кого подписан пользователь---
 
 # ---Получить все посты от пользователей, на которых подписан данный пользователь---
 @app.get("/feed/{user_id}", tags=["Получить"], summary="Получить все посты от пользователей, на которых подписан данный пользователь")
 def get_followed_posts(user_id : int, s : Session = Depends(get_session)):
-    userdb = s.get(User, user_id)
-    if not userdb:
-        raise HTTPException(status_code=404, detail=f"Пользователь не найден")
-    
-    following = s.exec(select(User)
-                       .join(Subscription, Subscription.followed_id == User.id)
-                       .where(Subscription.follower_id == user_id)).all()
-
-    postdb = 0
-
-    return {
-        "user" : userdb.name,
-        "feed" : following
-    }
+    ...
 # ---Получить все посты от пользователей, на которых подписан данный пользователь---
 
 if __name__ == "__main__":
