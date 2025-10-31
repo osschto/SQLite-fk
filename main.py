@@ -201,20 +201,48 @@ def get_followers(user_id : int, s : Session = Depends(get_session)):
     if not userdb:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
 
+    followers = [u.follower for u in userdb.followers]
 
-    return userdb.followers
+    return {
+        "user" : userdb.name,
+        "followers" : [f.name for f in followers]
+    }
 # ---Получить список подписчиков пользователя
 
 # ---Получить список тех, на кого подписан пользователь---
 @app.get("/users/{user_id}/following", tags=["Получить"], summary="Получить список тех, на кого подписан пользователь")
 def get_followed(user_id : int, s : Session = Depends(get_session)):
-    ...
+    userdb = s.get(User, user_id)
+    if not userdb:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    following = [u.followed for u in userdb.following]
+
+    return {
+        "name" : userdb.name,
+        "following" : [f.name for f in following]
+    }
 # ---Получить список тех, на кого подписан пользователь---
 
 # ---Получить все посты от пользователей, на которых подписан данный пользователь---
 @app.get("/feed/{user_id}", tags=["Получить"], summary="Получить все посты от пользователей, на которых подписан данный пользователь")
 def get_followed_posts(user_id : int, s : Session = Depends(get_session)):
-    ...
+    userdb = s.get(User, user_id)
+    if not userdb:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    posts = []
+    for f in userdb.following:
+        posts.extend(f.followed.posts)
+    return {
+        "user" : userdb.name,
+        "feed" : [
+            {
+                "user_id" : p.user_id,
+                "title" : p.title
+            } for p in posts
+        ]
+    }
 # ---Получить все посты от пользователей, на которых подписан данный пользователь---
 
 if __name__ == "__main__":
