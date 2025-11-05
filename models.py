@@ -27,6 +27,7 @@ class Post(SQLModel, table=True):
     user_id : Optional[int] = Field(foreign_key="user.id")
     title : str
     content : str
+    author : str
 
     user : Optional["User"] = Relationship(back_populates="posts")
     comments : List["Comment"] = Relationship(back_populates="post")
