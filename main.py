@@ -10,7 +10,7 @@ app = FastAPI()
 SQLModel.metadata.create_all(engine)
 
 # -------------------USER------------------- #
-@app.post("/users", tags=["Пользователь"], summary="Добавить нового пользователя")
+@app.post("/users", tags=["Пользователи"], summary="Добавить нового пользователя")
 def add_user(user : UserCreate, s : Session = Depends(get_session)):
     userdb = User(name = user.name)
     s.add(userdb)
@@ -19,7 +19,7 @@ def add_user(user : UserCreate, s : Session = Depends(get_session)):
     return {f"Пользователь '{userdb.name}' успешно добавлен"}
 
 
-@app.get("/users/posts/counts", tags=["Пользователь"], summary="Получить список всех пользователей и кол-во их постов")
+@app.get("/users/posts/count", tags=["Пользователи"], summary="Получить список всех пользователей и кол-во их постов")
 def get_users_posts_count(s : Session = Depends(get_session)):
     userdb = s.exec(select(User)).all()
     
@@ -28,7 +28,7 @@ def get_users_posts_count(s : Session = Depends(get_session)):
         } for user in userdb]
 
 
-@app.get("/users/{user_id}/followers", tags=["Пользователь"], summary="Получить список подписчиков пользователя")
+@app.get("/users/{user_id}/followers", tags=["Пользователи"], summary="Получить список подписчиков пользователя")
 def get_followers(user_id : int, s : Session = Depends(get_session)):
     userdb = s.get(User, user_id)
     if not userdb:
@@ -42,7 +42,7 @@ def get_followers(user_id : int, s : Session = Depends(get_session)):
     }
 
 
-@app.get("/users/{user_id}/posts_with_comments", tags=["Пользователь"], summary="Получить список постов пользователя с комментариями")
+@app.get("/users/{user_id}/posts_with_comments", tags=["Пользователи"], summary="Получить список постов пользователя с комментариями")
 def get_posts_with_comments(user_id : int, db : Session = Depends(get_session)):
     userdb = db.exec(select(User).where(User.id == user_id)).first()
     postdb = db.exec(select(Post).where(Post.user_id == user_id)).all()
@@ -63,7 +63,7 @@ def get_posts_with_comments(user_id : int, db : Session = Depends(get_session)):
 
 
 # -------------------POST------------------- #
-@app.post("/posts", tags=["Пост"], summary="Добавить новый пост")
+@app.post("/posts", tags=["Посты"], summary="Добавить новый пост")
 def add_post(post : PostCreate, s : Session = Depends(get_session)):
     userdb = s.get(User, post.user_id)
     if not userdb:
@@ -79,14 +79,14 @@ def add_post(post : PostCreate, s : Session = Depends(get_session)):
     }
 
 
-@app.get("/posts", tags=["Посты"], summary="получить список всех постов")
+@app.get("/posts/", tags=["Посты"], summary="Получить список всех постов")
 def get_all_posts(db : Session = Depends(get_session)):
     statement = select(Post).offset(2).limit(2)
     posts = db.exec(statement).all()
     return posts
 
 
-@app.get("/users/{user_id}/posts", tags=["Пост"], summary="Получить список всех постов пользователя")
+@app.get("/users/{user_id}/posts", tags=["Посты"], summary="Получить список всех постов конкретного пользователя")
 def get_posts(user_id : int, s : Session = Depends(get_session)):
     userdb = s.get(User, user_id)
     if not userdb:
@@ -102,7 +102,7 @@ def get_posts(user_id : int, s : Session = Depends(get_session)):
     }
 
 
-@app.get("/posts/search", tags=["Пост"], summary="Получить пост по ключевому слову")
+@app.get("/posts/search", tags=["Посты"], summary="Получить пост по ключевому слову")
 def search(keyword : str, db : Session = Depends(get_session)):
         posts = db.query(Post).filter(Post.title.ilike(f"%{keyword}%")).all()
         return {
@@ -115,7 +115,7 @@ def search(keyword : str, db : Session = Depends(get_session)):
                 }for p in posts]
         }
 
-@app.delete("/posts/{post_id}", tags=["Пост"], summary="Удалить пост")
+@app.delete("/posts/{post_id}", tags=["Посты"], summary="Удалить пост")
 def delete_post(post_id : int, db : Session = Depends(get_session)):
     postdb = db.exec(select(Post).where(Post.id == post_id)).first()
     comments = db.exec(select(Comment).where(Comment.post_id == post_id)).all()
@@ -131,7 +131,7 @@ def delete_post(post_id : int, db : Session = Depends(get_session)):
 
 
 # -------------------COMMENT------------------- #
-@app.post("/comments", tags=["Комментарий"], summary="Добавить комментарий к посту")
+@app.post("/comments", tags=["Комментарии"], summary="Добавить комментарий к посту")
 def add_comment(comment : CommentCreate, s : Session = Depends(get_session)):
     postdb = s.get(Post, comment.post_id)
     if not postdb:
@@ -146,7 +146,7 @@ def add_comment(comment : CommentCreate, s : Session = Depends(get_session)):
     }
 
 
-@app.get("/posts/{post_id}/comments/count", tags=["Комментарий"], summary="Получить кол-во комментариев конкретного поста")
+@app.get("/posts/{post_id}/comments/count", tags=["Комментарии"], summary="Получить кол-во комментариев конкретного поста")
 def get_comm_count(post_id : int, db : Session = Depends(get_session)):
     postdb = db.exec(select(Post).where(Post.id == post_id)).first()
     if not postdb:
@@ -158,7 +158,7 @@ def get_comm_count(post_id : int, db : Session = Depends(get_session)):
     }
 
 
-@app.get("/posts/{post_id}/comments", tags=["Комментарий"], summary="Получить список всех комментариев конкретного поста")
+@app.get("/posts/{post_id}/comments", tags=["Комментарии"], summary="Получить список всех комментариев конкретного поста")
 def get_comments(post_id : int, s : Session = Depends(get_session)):
     postdb = s.get(Post, post_id)
     if not postdb:
@@ -174,7 +174,7 @@ def get_comments(post_id : int, s : Session = Depends(get_session)):
 
 
 # -------------------TAG------------------- #
-@app.post("/tags", tags=["Тэг"], summary="Добавить тэг к посту")
+@app.post("/tags", tags=["Тэги"], summary="Добавить тэг к посту")
 def add_tag(tag : TagCreate, s : Session = Depends(get_session)):
     postdb = s.get(Post, tag.post_id)
     tagdb = s.exec(select(Tag).where(Tag.name == tag.name)).first()
@@ -197,7 +197,7 @@ def add_tag(tag : TagCreate, s : Session = Depends(get_session)):
     return {"message" : f"Тэг '{tagdb.name}' успешно добавлен"}
 
 
-@app.get("/tags/{tag_name}", tags=["Тэг"], summary= "Получить список постов по тэгу")
+@app.get("/tags/{tag_name}", tags=["Тэги"], summary= "Получить список постов по тэгу")
 def get_posts_by_tag(tag_name : str, s : Session = Depends(get_session)):
     tagdb = s.exec(select(Tag).where(Tag.name == tag_name)).first()
     if not tagdb:
@@ -214,7 +214,7 @@ def get_posts_by_tag(tag_name : str, s : Session = Depends(get_session)):
 
 
 # -------------------LIKE------------------- #
-@app.post("/posts/{post_id}/likes/users/{user_id}", tags=["Лайк"], summary="Поставить лайк")
+@app.post("/posts/{post_id}/likes/users/{user_id}", tags=["Лайки"], summary="Поставить лайк")
 def add_like(post_id : int, user_id : int, s : Session = Depends(get_session)):
     userdb = s.get(User, user_id)
     postdb = s.get(Post, post_id)
@@ -230,7 +230,7 @@ def add_like(post_id : int, user_id : int, s : Session = Depends(get_session)):
     return {"message" : f"Пользователь {userdb.name} поставил лайк на пост: '{postdb.title}'"}
 
 
-@app.get("/posts/{post_id}/likes", tags=["Лайк"], summary="Получить кол-во лайков и список тех, кто их поставил")
+@app.get("/posts/{post_id}/likes", tags=["Лайки"], summary="Получить кол-во лайков и список тех, кто их поставил")
 def get_like_list(post_id : int, s : Session = Depends(get_session)):
     postdb = s.get(Post, post_id)
     if not postdb:
